@@ -22,7 +22,8 @@ test.describe('Home Page', () => {
       await homePage.verifyPageLoaded()
       await destination.open(homePage)
       await expect(page).toHaveURL(destination.path)
-      await expect(page.locator('body')).not.toContainText('404')
+      // Match a standalone "404" only. Legal pages (BAA) contain citations such as "45 C.F.R. § 164.404".
+      await expect(page.locator('body')).not.toContainText(/(?<![\d.])404(?!\d)/)
       await expect(page.locator('body')).not.toContainText('Page not found')
     })
   }
