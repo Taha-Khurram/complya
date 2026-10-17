@@ -33,7 +33,7 @@ Playwright end-to-end test suite (JavaScript, CommonJS) that runs on the LambdaT
 
 ## CI (GitHub Actions)
 
-- `.github/workflows/_e2e.yml`: reusable workflow. Job `test` runs `npm test -- <test-path>` in the `staging` environment and uploads the Playwright report and `allure-results`. Job `publish` (only on `main`, never on pull requests) builds the Allure report with `allure awesome`, keeps the last 20 runs of history, and deploys it to the `gh-pages` branch under `<suite>/`.
+- `.github/workflows/_e2e.yml`: reusable workflow. Job `test` runs `npm test -- <test-path>` in the `staging` environment and uploads the Playwright report, `allure-results`, and a single-file Allure report (`allure-report-<suite>`, open `index.html` directly). Job `publish` (only on `main`, never on pull requests) builds the Allure report with `allure awesome`, keeps the last 20 runs of history, and deploys it to the `gh-pages` branch under `<suite>/`.
 - `.github/workflows/staging-e2e.yml` ("Staging (E2E Tests)"): full suite on push and PR to `main`, plus manual runs.
 - `.github/workflows/e2e-home.yml` ("Home (E2E Tests)"): `tests/home` on pushes to `main` that touch home tests or shared code, plus manual runs.
 - `.github/pages/index.html`: landing page linking each report.

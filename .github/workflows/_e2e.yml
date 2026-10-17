@@ -60,6 +60,20 @@ jobs:
           path: allure-results/
           retention-days: 14
 
+      - name: Generate Allure report (single file)
+        if: always()
+        env:
+          REPORT_NAME: ${{ inputs.report-name }}
+        run: npx allure awesome ./allure-results --single-file --output allure-report --report-name "$REPORT_NAME"
+
+      - name: Upload Allure report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report-${{ inputs.suite }}
+          path: allure-report/
+          retention-days: 14
+
   publish:
     needs: test
     if: always() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
@@ -117,3 +131,8 @@ jobs:
           user_name: github-actions[bot]
           user_email: 41898282+github-actions[bot]@users.noreply.github.com
           commit_message: "Publish ${{ inputs.suite }} Allure report"
+
+      - name: Add report link to summary
+        run: |
+          echo "### Allure report: $REPORT_NAME" >> "$GITHUB_STEP_SUMMARY"
+          echo "$PAGES_URL/$SUITE/" >> "$GITHUB_STEP_SUMMARY"
