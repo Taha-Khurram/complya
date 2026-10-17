@@ -1,0 +1,15 @@
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+.env
+/allure-results/
+/allure-report/
+
+# Local tooling
+.playwright-mcp/
+.claude/settings.local.json
