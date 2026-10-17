@@ -31,6 +31,17 @@ Playwright end-to-end test suite (JavaScript, CommonJS) that runs on the LambdaT
 - `.env` must contain `LT_USERNAME`, `LT_ACCESS_KEY` and `MAILSLURP_API_KEY`. It is gitignored, so never commit it or print its values.
 - `workers: 3` in `playwright.config.js` must stay at or below the LambdaTest parallel session limit.
 
+## CI (GitHub Actions)
+
+- `.github/workflows/_e2e.yml`: reusable workflow. Job `test` runs `npm test -- <test-path>` in the `staging` environment and uploads the Playwright report and `allure-results`. Job `publish` (only on `main`, never on pull requests) builds the Allure report with `allure awesome`, keeps the last 20 runs of history, and deploys it to the `gh-pages` branch under `<suite>/`.
+- `.github/workflows/staging-e2e.yml` ("Staging (E2E Tests)"): full suite on push and PR to `main`, plus manual runs.
+- `.github/workflows/e2e-home.yml` ("Home (E2E Tests)"): `tests/home` on pushes to `main` that touch home tests or shared code, plus manual runs.
+- `.github/pages/index.html`: landing page linking each report.
+- Reports: https://taha-khurram.github.io/complya/ (`/staging/`, `/home/`).
+- Secrets (`MAILSLURP_API_KEY`, `LT_USERNAME`, `LT_ACCESS_KEY`) live in the GitHub `staging` environment.
+- To add a flow: create `tests/<flow>/`, copy `e2e-home.yml` to `e2e-<flow>.yml`, change `name`, the `tests/home/**` path filter, `suite`, `test-path` and `report-name`, then add a link in `.github/pages/index.html`.
+- Commits and PRs must not list Claude as author or co-author.
+
 ## Structure
 
 - `playwright.config.js`: projects, reporters (list, html, allure-playwright), and `trace`/`video`/`screenshot` all set to `on`.

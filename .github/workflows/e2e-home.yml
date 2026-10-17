@@ -1,0 +1,24 @@
+name: Home (E2E Tests)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - tests/home/**
+      - pages/**
+      - utils/**
+      - lambdatest-setup.js
+      - playwright.config.js
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  e2e:
+    uses: ./.github/workflows/_e2e.yml
+    with:
+      suite: home
+      test-path: tests/home
+      report-name: Home (E2E Tests)
+    secrets: inherit
