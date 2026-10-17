@@ -9,6 +9,7 @@ Playwright end-to-end test suite (JavaScript, CommonJS) that runs on the LambdaT
 - Always generate a plan before doing something.
 - Implement only after I approve the plan.
 - Follow the directory structure described below. Put new files where they belong.
+- Never run `git commit`, `git push` or `git pull` (or `git fetch`/`git merge` from the remote) on your own. Stop after making changes, tell me they're ready, and let me commit, push and pull.
 
 ## LambdaTest status: paused
 
