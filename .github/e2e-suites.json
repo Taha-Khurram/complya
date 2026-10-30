@@ -1,4 +1,5 @@
 [
   { "suite": "home", "path": "tests/home", "name": "Home (E2E Tests)" },
-  { "suite": "login", "path": "tests/login", "name": "Login (E2E Tests)" }
+  { "suite": "login", "path": "tests/login", "name": "Login (E2E Tests)" },
+  { "suite": "signup", "path": "tests/signup", "name": "Signup (E2E Tests)" }
 ]
