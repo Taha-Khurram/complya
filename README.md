@@ -40,9 +40,11 @@ End-to-end test suite for [Complya](https://complya.dev), the AI-native practice
 |---|---|---|---|---|
 | Home | `tests/home` | https://complya.dev | 9 | 55 |
 | Login | `tests/login` | https://app.complya.dev | 7 | 10 |
+| Signup | `tests/signup` | https://app.complya.dev | 9 | 10 |
 
 - **Home** checks that every link on the home page opens the correct page and that the page loads (URL, title and h1). This covers the header, menus, main content, platform cards, footer and app store links.
 - **Login** covers email and password sign-in: a successful login, required-field and email-format validation, a wrong password, an unregistered email, password masking, and submitting with Enter.
+- **Signup** covers account creation: form validation, password rules and masking, a registered email, and a full signup that verifies the email through testmail.app and reaches onboarding. Each full signup run (SU-009) creates a dev account and uses one testmail.app email.
 
 ---
 
@@ -62,11 +64,16 @@ complya/
 │   ├── solutionpage.js        # /solutions/* pages (keyed by path)
 │   ├── legalpage.js           # /legal and legal documents (keyed by path)
 │   ├── loginpage.js           # App sign-in
+│   ├── signuppage.js          # Sign up form, Check your email and Email Verified pages
+│   ├── onboardingpage.js      # First onboarding screen after a new account's first login
 │   └── ...                    # About, Contact, Support, Download, Pricing, and others
 ├── tests/
 │   ├── home/                  # hp-0xx-*.spec.js
 │   ├── login/                 # lg-0xx-*.spec.js
+│   ├── signup/                # su-0xx-*.spec.js
 │   └── seed.spec.js           # Seed used by the Playwright MCP agents
+├── utils/
+│   └── testmail.js            # testmail.app inbox helper for email tests
 ├── Test Artifacts/            # Test plans and Gherkin feature files per suite
 ├── specs/                     # Raw test plans from the planner agent
 └── playwright.config.js       # Project, reporters, baseURL, trace, video and screenshots
@@ -97,13 +104,17 @@ Create a `.env` file in the project root. It is gitignored, so never commit it o
 ```dotenv
 USER_EMAIL=
 USER_PASSWORD=
+TESTMAIL_API_KEY=
+TESTMAIL_NAMESPACE=
 ```
 
 | Variable | Required for | Notes |
 |---|---|---|
-| `USER_EMAIL` | Login suite | Test account on **app.complya.dev**. Login tests skip without it |
+| `USER_EMAIL` | Login suite, Signup SU-008 | Test account on **app.complya.dev**. Tests that need it skip without it |
 | `USER_PASSWORD` | Login suite | Password for `USER_EMAIL` |
-| `APP_URL` | Optional | Overrides the app host for the login suite (default `https://app.complya.dev`) |
+| `TESTMAIL_API_KEY` | Email tests | API key from the [testmail.app](https://testmail.app) console |
+| `TESTMAIL_NAMESPACE` | Email tests | Your testmail.app namespace. Addresses look like `<namespace>.<tag>@inbox.testmail.app` |
+| `APP_URL` | Optional | Overrides the app host for the login and signup suites (default `https://app.complya.dev`) |
 
 The Home suite needs none of these.
 
@@ -145,7 +156,7 @@ All CI runs through one workflow, **E2E Tests** (`.github/workflows/e2e.yml`). I
 ### Run it
 
 1. Open **Actions → E2E Tests → Run workflow**.
-2. Pick the branch and a **Suite**: `all`, `home` or `login`.
+2. Pick the branch and a **Suite**: `all`, `home`, `login` or `signup`.
 3. Click **Run workflow**.
 
 ### What happens
@@ -162,7 +173,7 @@ plan  ──►  test (one runner per suite, in parallel)  ──►  publish (o
 
 **Artifacts per run (kept 14 days):** `playwright-report-<suite>`, `allure-results-<suite>`, and `allure-report-<suite>`, a single-file report you can open as `index.html` directly.
 
-**Secrets:** `USER_EMAIL` and `USER_PASSWORD` live in the GitHub `staging` environment.
+**Secrets:** `USER_EMAIL`, `USER_PASSWORD`, `TESTMAIL_API_KEY` and `TESTMAIL_NAMESPACE` live in the GitHub `staging` environment.
 
 **Report commits:** the publish job commits to `gh-pages` as the user who started the run, not as `github-actions[bot]`.
 

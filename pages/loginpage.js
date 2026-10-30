@@ -1,6 +1,8 @@
 //Created By AI
 const { expect } = require('@playwright/test')
 const { DashboardPage } = require('./dashboardpage')
+const { OnboardingPage } = require('./onboardingpage')
+const { SignUpPage } = require('./signuppage')
 
 class LoginPage {
     constructor(page) {
@@ -15,6 +17,10 @@ class LoginPage {
         this.passwordError = page.locator('.form-group').filter({ has: this.passwordInput }).locator('.validation-message')
 
         this.formError = page.getByRole('alert')
+        // Inline message when an account that hasn't verified its email signs in
+        this.emailNotVerifiedMessage = page.getByText('Email not verified.')
+
+        this.signUpLink = page.getByRole('link', { name: 'Sign Up', exact: true })
     }
 
     async goto() {
@@ -52,6 +58,19 @@ class LoginPage {
         await this.fillPassword(password)
         await this.submit()
         return new DashboardPage(this.page)
+    }
+
+    // A new account's first login opens onboarding instead of Home
+    async loginToOnboarding(email, password) {
+        await this.fillEmail(email)
+        await this.fillPassword(password)
+        await this.submit()
+        return new OnboardingPage(this.page)
+    }
+
+    async clickSignUp() {
+        await this.signUpLink.click()
+        return new SignUpPage(this.page)
     }
 
     async togglePasswordVisibility() {
