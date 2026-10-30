@@ -1,13 +1,11 @@
 {
-  "name": "lambdatest",
+  "name": "complya-e2e",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "npx playwright test --project=chromium-local",
-    "paused:test:chrome": "npx playwright test --project=\"chrome:latest:Windows 11@lambdatest\"",
     "test:local": "npx playwright test --project=chromium-local",
-    "paused:test:lambdatest": "npx playwright test --project=\"*@lambdatest\"",
     "install:browsers": "npx playwright install chromium",
     "report": "npx playwright show-report",
     "allure:generate": "npx allure generate ./allure-results",
@@ -25,7 +23,6 @@
     "allure": "3.21.0",
     "allure-playwright": "3.11.1",
     "dotenv": "^18.0.8",
-    "mailslurp-client": "17.6.0",
     "playwright": "1.61.0",
     "rimraf": "^6.1.3"
   }

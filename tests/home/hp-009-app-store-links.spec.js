@@ -1,6 +1,5 @@
 // created by AI
-const { test } = require('../../lambdatest-setup')
-const { expect } = require('@playwright/test')
+const { test, expect } = require('@playwright/test')
 const { HomePage } = require('../../pages/homepage')
 
 const storeLinks = [

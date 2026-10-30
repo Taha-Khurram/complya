@@ -39,9 +39,6 @@ jobs:
       matrix:
         include: ${{ fromJSON(needs.plan.outputs.suites) }}
     env:
-      MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
-      LT_USERNAME: ${{ secrets.LT_USERNAME }}
-      LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
       USER_EMAIL: ${{ secrets.USER_EMAIL }}
       USER_PASSWORD: ${{ secrets.USER_PASSWORD }}
       TEST_PATH: ${{ matrix.path }}
@@ -153,8 +150,9 @@ jobs:
           publish_branch: gh-pages
           publish_dir: ./site
           keep_files: true
-          user_name: github-actions[bot]
-          user_email: 41898282+github-actions[bot]@users.noreply.github.com
+          # Commit as whoever started the run, so github-actions[bot] isn't listed as a contributor
+          user_name: ${{ github.actor }}
+          user_email: ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
           commit_message: "Publish ${{ matrix.suite }} Allure report"
 
       - name: Add report link to summary

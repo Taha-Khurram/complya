@@ -1,5 +1,5 @@
 // created by AI
-const { test } = require('../../lambdatest-setup')
+const { test } = require('@playwright/test')
 const { HomePage } = require('../../pages/homepage')
 
 // One link per menu; the footer test covers every destination

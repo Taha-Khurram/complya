@@ -1,6 +1,5 @@
 // created by AI
-const { test } = require('../../lambdatest-setup')
-const { expect } = require('@playwright/test')
+const { test, expect } = require('@playwright/test')
 const { LoginPage } = require('../../pages/loginpage')
 
 test.use({ baseURL: process.env.APP_URL || 'https://app.complya.dev' })
