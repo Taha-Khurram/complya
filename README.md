@@ -40,11 +40,9 @@ End-to-end test suite for [Complya](https://complya.dev), the AI-native practice
 |---|---|---|---|---|
 | Home | `tests/home` | https://complya.dev | 9 | 55 |
 | Login | `tests/login` | https://app.complya.dev | 7 | 10 |
-| Signup | `tests/signup` | https://app.complya.dev | 9 | 10 |
 
 - **Home** checks that every link on the home page opens the correct page and that the page loads (URL, title and h1). This covers the header, menus, main content, platform cards, footer and app store links.
 - **Login** covers email and password sign-in: a successful login, required-field and email-format validation, a wrong password, an unregistered email, password masking, and submitting with Enter.
-- **Signup** covers account creation: form validation, password rules and masking, a registered email, and a full signup that verifies the email through testmail.app and reaches onboarding. Each full signup run (SU-009) creates a dev account and uses one testmail.app email.
 
 ---
 
@@ -64,13 +62,10 @@ complya/
 │   ├── solutionpage.js        # /solutions/* pages (keyed by path)
 │   ├── legalpage.js           # /legal and legal documents (keyed by path)
 │   ├── loginpage.js           # App sign-in
-│   ├── signuppage.js          # Sign up form, Check your email and Email Verified pages
-│   ├── onboardingpage.js      # First onboarding screen after a new account's first login
 │   └── ...                    # About, Contact, Support, Download, Pricing, and others
 ├── tests/
 │   ├── home/                  # hp-0xx-*.spec.js
 │   ├── login/                 # lg-0xx-*.spec.js
-│   ├── signup/                # su-0xx-*.spec.js
 │   └── seed.spec.js           # Seed used by the Playwright MCP agents
 ├── Test Artifacts/            # Test plans and Gherkin feature files per suite
 ├── specs/                     # Raw test plans from the planner agent
@@ -106,9 +101,9 @@ USER_PASSWORD=
 
 | Variable | Required for | Notes |
 |---|---|---|
-| `USER_EMAIL` | Login suite, Signup SU-008 | Test account on **app.complya.dev**. Tests that need it skip without it |
+| `USER_EMAIL` | Login suite | Test account on **app.complya.dev**. Login tests skip without it |
 | `USER_PASSWORD` | Login suite | Password for `USER_EMAIL` |
-| `APP_URL` | Optional | Overrides the app host for the login and signup suites (default `https://app.complya.dev`) |
+| `APP_URL` | Optional | Overrides the app host for the login suite (default `https://app.complya.dev`) |
 
 The Home suite needs none of these.
 
@@ -150,7 +145,7 @@ All CI runs through one workflow, **E2E Tests** (`.github/workflows/e2e.yml`). I
 ### Run it
 
 1. Open **Actions → E2E Tests → Run workflow**.
-2. Pick the branch and a **Suite**: `all`, `home`, `login` or `signup`.
+2. Pick the branch and a **Suite**: `all`, `home` or `login`.
 3. Click **Run workflow**.
 
 ### What happens
