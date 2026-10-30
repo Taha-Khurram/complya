@@ -1,0 +1,163 @@
+name: E2E Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: Suite to run
+        type: choice
+        # Keep in sync with .github/e2e-suites.json
+        options: [all, home, login]
+        default: all
+
+permissions:
+  contents: write
+
+jobs:
+  plan:
+    name: Pick suites
+    runs-on: ubuntu-latest
+    outputs:
+      suites: ${{ steps.pick.outputs.suites }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select suites from .github/e2e-suites.json
+        id: pick
+        env:
+          SUITE: ${{ inputs.suite }}
+        run: echo "suites=$(jq -c --arg s "$SUITE" 'map(select($s == "all" or .suite == $s))' .github/e2e-suites.json)" >> "$GITHUB_OUTPUT"
+
+  test:
+    name: Test (${{ matrix.name }})
+    needs: plan
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.suites) }}
+    env:
+      MAILSLURP_API_KEY: ${{ secrets.MAILSLURP_API_KEY }}
+      LT_USERNAME: ${{ secrets.LT_USERNAME }}
+      LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
+      USER_EMAIL: ${{ secrets.USER_EMAIL }}
+      USER_PASSWORD: ${{ secrets.USER_PASSWORD }}
+      TEST_PATH: ${{ matrix.path }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        run: npm test -- "$TEST_PATH"
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.suite }}
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-${{ matrix.suite }}
+          path: allure-results/
+          retention-days: 14
+
+      - name: Generate Allure report (single file)
+        if: always()
+        env:
+          REPORT_NAME: ${{ matrix.name }}
+        run: npx allure awesome ./allure-results --single-file --output allure-report --report-name "$REPORT_NAME"
+
+      - name: Upload Allure report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report-${{ matrix.suite }}
+          path: allure-report/
+          retention-days: 14
+
+  publish:
+    name: Publish (${{ matrix.name }})
+    needs: [plan, test]
+    if: always() && needs.plan.result == 'success' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      # One suite at a time, so the gh-pages pushes don't overwrite each other
+      max-parallel: 1
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.suites) }}
+    concurrency:
+      group: gh-pages
+      cancel-in-progress: false
+    env:
+      SUITE: ${{ matrix.suite }}
+      REPORT_NAME: ${{ matrix.name }}
+      PAGES_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download Allure results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results-${{ matrix.suite }}
+          path: allure-results
+
+      - name: Fetch previous history
+        run: |
+          mkdir -p history
+          if curl -sfL "$PAGES_URL/$SUITE/history/history.jsonl" -o history/full.jsonl; then
+            tail -n 19 history/full.jsonl > history/history.jsonl
+          fi
+          rm -f history/full.jsonl
+
+      - name: Generate Allure report
+        run: npx allure awesome ./allure-results --output "site/$SUITE" --report-name "$REPORT_NAME" --history-path history/history.jsonl
+
+      - name: Prepare site
+        run: |
+          mkdir -p "site/$SUITE/history"
+          cp history/history.jsonl "site/$SUITE/history/"
+          # Landing page links come from the suite list
+          jq -r '.[] | "      <li><a href=\"./\(.suite)/\">\(.name)<span>\(.path)</span></a></li>"' .github/e2e-suites.json > links.html
+          sed -e '/<!-- SUITES -->/{r links.html' -e 'd}' .github/pages/index.html > site/index.html
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./site
+          keep_files: true
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
+          commit_message: "Publish ${{ matrix.suite }} Allure report"
+
+      - name: Add report link to summary
+        run: |
+          echo "### Allure report: $REPORT_NAME" >> "$GITHUB_STEP_SUMMARY"
+          echo "$PAGES_URL/$SUITE/" >> "$GITHUB_STEP_SUMMARY"

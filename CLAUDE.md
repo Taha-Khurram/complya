@@ -34,13 +34,15 @@ Playwright end-to-end test suite (JavaScript, CommonJS) that runs on the LambdaT
 
 ## CI (GitHub Actions)
 
-- `.github/workflows/_e2e.yml`: reusable workflow. Job `test` runs `npm test -- <test-path>` in the `staging` environment and uploads the Playwright report, `allure-results`, and a single-file Allure report (`allure-report-<suite>`, open `index.html` directly). Job `publish` (only on `main`, never on pull requests) builds the Allure report with `allure awesome`, keeps the last 20 runs of history, and deploys it to the `gh-pages` branch under `<suite>/`.
-- `.github/workflows/staging-e2e.yml` ("Staging (E2E Tests)"): full suite on push and PR to `main`, plus manual runs.
-- `.github/workflows/e2e-home.yml` ("Home (E2E Tests)"): `tests/home` on pushes to `main` that touch home tests or shared code, plus manual runs.
-- `.github/pages/index.html`: landing page linking each report.
-- Reports: https://taha-khurram.github.io/complya/ (`/staging/`, `/home/`).
-- Secrets (`MAILSLURP_API_KEY`, `LT_USERNAME`, `LT_ACCESS_KEY`) live in the GitHub `staging` environment.
-- To add a flow: create `tests/<flow>/`, copy `e2e-home.yml` to `e2e-<flow>.yml`, change `name`, the `tests/home/**` path filter, `suite`, `test-path` and `report-name`, then add a link in `.github/pages/index.html`.
+- `.github/workflows/e2e.yml` ("E2E Tests"): the only workflow. It is manual only (`workflow_dispatch`), with no push or PR triggers. A **Suite** dropdown offers `all` or a single suite.
+  - Job `plan` reads `.github/e2e-suites.json` and picks the suites to run.
+  - Job `test` runs one matrix leg per suite, in parallel with `fail-fast: false`, in the `staging` environment. Each leg runs `npm test -- <path>` and uploads `playwright-report-<suite>`, `allure-results-<suite>` and a single-file `allure-report-<suite>` (open `index.html` directly).
+  - Job `publish` runs only on `main`, one suite at a time (`max-parallel: 1`). It builds the Allure report with `allure awesome`, keeps the last 20 runs of history, and deploys it to the `gh-pages` branch under `<suite>/`.
+- `.github/e2e-suites.json`: the suite list (`suite`, `path`, `name`). The test matrix and the report landing page are both built from it.
+- `.github/pages/index.html`: landing page template. The publish job replaces `<!-- SUITES -->` with one link per suite from `e2e-suites.json`, so don't add links by hand.
+- Reports: https://taha-khurram.github.io/complya/ (`/home/`, `/login/`).
+- Secrets (`MAILSLURP_API_KEY`, `LT_USERNAME`, `LT_ACCESS_KEY`, `USER_EMAIL`, `USER_PASSWORD`) live in the GitHub `staging` environment. Login tests skip when `USER_EMAIL` or `USER_PASSWORD` is missing.
+- **Every time a suite is added**, add a line for it to `.github/e2e-suites.json`, for example `{ "suite": "<flow>", "path": "tests/<flow>", "name": "<Flow> (E2E Tests)" }`. Also add `<flow>` to the `suite` dropdown `options` in `e2e.yml`, because GitHub can't build dropdown options from a file. Put the tests in `tests/<flow>/`. No new workflow file is needed.
 - Commits and PRs must not list Claude as author or co-author.
 
 ## Structure
@@ -54,7 +56,7 @@ Playwright end-to-end test suite (JavaScript, CommonJS) that runs on the LambdaT
   - `inbox` creates a MailSlurp inbox (`{ id, emailAddress }`) before the test and deletes it afterwards. It is only created when a test requests it.
 - `utils/`: helpers. `utils/mailslurp.js` wraps the MailSlurp SDK (`createInbox`, `deleteInbox`, `waitForLatestEmail`, `sendEmail`, `extractLinks`, `extractCode`).
 - `tests/`: spec files. Only `**/*.spec.js` matches `testMatch`, so `seed.spec.ts` (the Playwright MCP generator seed) is not run by `npx playwright test`.
-- `pages/`: page objects (`homepage.js`, currently empty).
+- `pages/`: page objects. `basepage.js` holds the shared header, the footer and `verifyPageLoaded()`. `homepage.js` click methods return the destination page object. `productpage.js`, `solutionpage.js` and `legalpage.js` each cover a group of pages, keyed by path.
 - `specs/`: Markdown test plans written by the playwright-test-planner agent.
 
 ## Conventions

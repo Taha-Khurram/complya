@@ -1,64 +1,107 @@
 const { expect } = require('@playwright/test')
+const { BasePage } = require('./basepage')
+const { LoginPage } = require('./loginpage')
+const { RequestDemoPage } = require('./requestdemopage')
+const { PricingPage } = require('./pricingpage')
+const { AboutPage } = require('./aboutpage')
+const { SecurityPage } = require('./securitypage')
+const { ContactPage } = require('./contactpage')
+const { SupportPage } = require('./supportpage')
+const { DownloadPage } = require('./downloadpage')
+const { DocsPage } = require('./docspage')
+const { ProductPage } = require('./productpage')
+const { SolutionPage } = require('./solutionpage')
+const { LegalPage } = require('./legalpage')
 
-class HomePage {
+class HomePage extends BasePage {
     constructor(page) {
-        this.page = page
+        super(page)
 
-        // Navigation
-        this.navLogo = page.getByRole('navigation').getByRole('link', { name: 'Complya logo' })
-        this.loginLink = page.getByRole('link', { name: 'Login' })
-        this.navBookDemoLink = page.getByRole('navigation').getByRole('link', { name: 'Book a demo' })
+        this.path = '/'
+        this.title = 'Complya | AI-Native ABA Practice Management Software'
+        this.heading = page.getByRole('heading', { level: 1, name: 'Built for the people who provide care.', exact: true })
 
-        // Hero
-        this.heroHeading = page.getByRole('heading', { name: 'The All-in-One Platform for Modern Care Management' })
-        this.heroBookDemoLink = page.getByRole('main').getByRole('link', { name: 'Book a demo' })
+        // Header
+        this.headerLogo = this.header.getByRole('link', { name: 'Complya home' })
+        this.logInLink = this.header.getByRole('link', { name: 'Log in' })
+        this.headerBookDemoLink = this.header.getByRole('link', { name: 'Book a demo' })
 
-        // Smarter Workflow Management
-        this.workflowHeading = page.getByRole('heading', { name: 'Smarter Workflow Management' })
-        this.appStoreLink = page.getByRole('link', { name: 'Download on the App Store' })
-        this.googlePlayLink = page.getByRole('link', { name: 'Get Complya on Google Play' })
+        // Main content ("Book a demo" appears in several sections, so those are scoped to their section)
+        this.main = page.getByRole('main')
+        this.heroSection = this.main.locator('section').filter({ has: this.heading })
+        this.platformSection = this.main.locator('section')
+            .filter({ has: page.getByRole('heading', { name: 'One system for the clinical work and the business.' }) })
+        this.closingSection = this.main.locator('section')
+            .filter({ has: page.getByRole('heading', { name: 'See Complya with sessions like yours.' }) })
+        this.heroBookDemoLink = this.heroSection.getByRole('link', { name: 'Book a demo' })
+        this.closingBookDemoLink = this.closingSection.getByRole('link', { name: 'Book a demo' })
 
         // Footer
-        this.footerLogo = page.getByRole('contentinfo').getByRole('link', { name: 'Complya logo' })
-        this.footerHomepageLink = page.getByRole('link', { name: 'Homepage' })
-        this.footerDownloadAppLink = page.getByRole('link', { name: 'Download App' })
-        this.footerSupportLink = page.getByRole('link', { name: 'Support' })
-        this.footerMsaLink = page.getByRole('link', { name: 'MSA - Master Service Agreement' })
-        this.footerBaaLink = page.getByRole('link', { name: 'BAA - Business Associate Agreement' })
-        this.footerPrivacyLink = page.getByRole('link', { name: 'Privacy' })
-        this.footerTermsLink = page.getByRole('link', { name: 'Terms of Service' })
-        this.footerDocumentLink = page.getByRole('link', { name: 'Document' })
-        this.copyrightText = page.getByText('© 2026 Complya')
+        this.footerLogo = this.footer.getByRole('link', { name: 'Complya home' })
+        this.appStoreLink = this.footer.getByRole('link', { name: 'Download Complya on the App Store' })
+        this.googlePlayLink = this.footer.getByRole('link', { name: 'Get Complya on Google Play' })
     }
 
-    async goto() {
-        await this.page.goto('/')
+    // Clicks an internal link and returns the page object for its href
+    async #follow(link) {
+        const path = await link.getAttribute('href')
+        await link.click()
+        return pageFor(this.page, path)
     }
 
-    async verifyPageLoaded() {
-        await expect(this.page).toHaveURL(/\/home/)
-        await expect(this.heroHeading).toBeVisible()
+    // Header
+    async clickHeaderLogo() {
+        return this.#follow(this.headerLogo)
     }
 
-    // Navigation
-    async clickNavLogo() {
-        await this.navLogo.click()
+    async clickHeaderLink(name) {
+        return this.#follow(this.primaryNav.getByRole('link', { name, exact: true }))
     }
 
-    async clickLogin() {
-        await this.loginLink.click()
+    async clickHeaderBookDemo() {
+        return this.#follow(this.headerBookDemoLink)
     }
 
-    async clickNavBookDemo() {
-        await this.navBookDemoLink.click()
+    async clickLogIn() {
+        await this.logInLink.click()
+        return new LoginPage(this.page)
     }
 
-    // Hero
+    // Product, Solutions and Company menus open on hover; closed panels are hidden
+    async clickMenuLink(menu, name) {
+        const menuButton = this.primaryNav.getByRole('button', { name: menu, exact: true })
+        await menuButton.hover()
+        await expect(menuButton).toHaveAttribute('aria-expanded', 'true')
+        return this.#follow(this.primaryNav.getByRole('link', { name }))
+    }
+
+    // Main content
     async clickHeroBookDemo() {
-        await this.heroBookDemoLink.click()
+        return this.#follow(this.heroBookDemoLink)
     }
 
-    // Smarter Workflow Management (these open a new tab and return it)
+    async clickClosingBookDemo() {
+        return this.#follow(this.closingBookDemoLink)
+    }
+
+    async clickMainLink(name) {
+        return this.#follow(this.main.getByRole('link', { name, exact: true }))
+    }
+
+    async clickPlatformCard(path) {
+        return this.#follow(this.platformSection.locator(`a[href="${path}"]`))
+    }
+
+    // Footer
+    async clickFooterLogo() {
+        return this.#follow(this.footerLogo)
+    }
+
+    async clickFooterLink(name) {
+        return this.#follow(this.footerNav.getByRole('link', { name, exact: true }))
+    }
+
+    // App store links open a new tab and return it
     async clickAppStore() {
         const popupPromise = this.page.waitForEvent('popup')
         await this.appStoreLink.click()
@@ -70,43 +113,26 @@ class HomePage {
         await this.googlePlayLink.click()
         return await popupPromise
     }
+}
 
-    // Footer
-    async clickFooterLogo() {
-        await this.footerLogo.click()
+// Page object for each internal path the home page links to
+function pageFor(page, path) {
+    const pages = {
+        '/': HomePage,
+        '/requestdemo': RequestDemoPage,
+        '/pricing': PricingPage,
+        '/about': AboutPage,
+        '/security': SecurityPage,
+        '/contact': ContactPage,
+        '/contact/support': SupportPage,
+        '/download': DownloadPage,
+        '/docs': DocsPage,
     }
-
-    async clickFooterHomepage() {
-        await this.footerHomepageLink.click()
+    if (pages[path]) return new pages[path](page)
+    for (const PageClass of [ProductPage, SolutionPage, LegalPage]) {
+        if (path in PageClass.PAGES) return new PageClass(page, path)
     }
-
-    async clickDownloadApp() {
-        await this.footerDownloadAppLink.click()
-    }
-
-    async clickSupport() {
-        await this.footerSupportLink.click()
-    }
-
-    async clickMsa() {
-        await this.footerMsaLink.click()
-    }
-
-    async clickBaa() {
-        await this.footerBaaLink.click()
-    }
-
-    async clickPrivacy() {
-        await this.footerPrivacyLink.click()
-    }
-
-    async clickTerms() {
-        await this.footerTermsLink.click()
-    }
-
-    async clickDocument() {
-        await this.footerDocumentLink.click()
-    }
+    throw new Error(`No page object for ${path}`)
 }
 
 module.exports = { HomePage }

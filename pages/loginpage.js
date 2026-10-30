@@ -1,4 +1,5 @@
 //Created By AI
+const { expect } = require('@playwright/test')
 const { DashboardPage } = require('./dashboardpage')
 
 class LoginPage {
@@ -20,6 +21,12 @@ class LoginPage {
         await this.page.goto('/app/sign-in', { waitUntil: 'domcontentloaded' })
         await this.emailInput.waitFor({ state: 'visible' })
         return this
+    }
+
+    // The app bundle can take 30s+ to load, so allow a long wait
+    async verifyPageLoaded() {
+        await expect(this.page).toHaveURL(/\/app\/sign-in/, { timeout: 60000 })
+        await expect(this.emailInput).toBeVisible({ timeout: 60000 })
     }
 
     async fillEmail(email) {
