@@ -41,6 +41,8 @@ jobs:
     env:
       USER_EMAIL: ${{ secrets.USER_EMAIL }}
       USER_PASSWORD: ${{ secrets.USER_PASSWORD }}
+      TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
+      TESTMAIL_NAMESPACE: ${{ secrets.TESTMAIL_NAMESPACE }}
       TEST_PATH: ${{ matrix.path }}
     steps:
       - uses: actions/checkout@v4

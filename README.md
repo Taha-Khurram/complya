@@ -67,6 +67,8 @@ complya/
 │   ├── home/                  # hp-0xx-*.spec.js
 │   ├── login/                 # lg-0xx-*.spec.js
 │   └── seed.spec.js           # Seed used by the Playwright MCP agents
+├── utils/
+│   └── testmail.js            # testmail.app inbox helper for email tests
 ├── Test Artifacts/            # Test plans and Gherkin feature files per suite
 ├── specs/                     # Raw test plans from the planner agent
 └── playwright.config.js       # Project, reporters, baseURL, trace, video and screenshots
@@ -97,12 +99,16 @@ Create a `.env` file in the project root. It is gitignored, so never commit it o
 ```dotenv
 USER_EMAIL=
 USER_PASSWORD=
+TESTMAIL_API_KEY=
+TESTMAIL_NAMESPACE=
 ```
 
 | Variable | Required for | Notes |
 |---|---|---|
 | `USER_EMAIL` | Login suite | Test account on **app.complya.dev**. Login tests skip without it |
 | `USER_PASSWORD` | Login suite | Password for `USER_EMAIL` |
+| `TESTMAIL_API_KEY` | Email tests | API key from the [testmail.app](https://testmail.app) console |
+| `TESTMAIL_NAMESPACE` | Email tests | Your testmail.app namespace. Addresses look like `<namespace>.<tag>@inbox.testmail.app` |
 | `APP_URL` | Optional | Overrides the app host for the login suite (default `https://app.complya.dev`) |
 
 The Home suite needs none of these.
@@ -162,7 +168,7 @@ plan  ──►  test (one runner per suite, in parallel)  ──►  publish (o
 
 **Artifacts per run (kept 14 days):** `playwright-report-<suite>`, `allure-results-<suite>`, and `allure-report-<suite>`, a single-file report you can open as `index.html` directly.
 
-**Secrets:** `USER_EMAIL` and `USER_PASSWORD` live in the GitHub `staging` environment.
+**Secrets:** `USER_EMAIL`, `USER_PASSWORD`, `TESTMAIL_API_KEY` and `TESTMAIL_NAMESPACE` live in the GitHub `staging` environment.
 
 **Report commits:** the publish job commits to `gh-pages` as the user who started the run, not as `github-actions[bot]`.
 

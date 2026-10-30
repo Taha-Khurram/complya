@@ -22,6 +22,7 @@ Playwright end-to-end test suite (JavaScript, CommonJS) that runs on Chromium, l
 ## Setup
 
 - `.env` holds `USER_EMAIL` and `USER_PASSWORD` (a dev test account on app.complya.dev, used by the login suite). It is gitignored, so never commit it or print its values. `playwright.config.js` loads it with `dotenv`.
+- `.env` also holds `TESTMAIL_API_KEY` and `TESTMAIL_NAMESPACE` for [testmail.app](https://testmail.app), used by email tests through `utils/testmail.js`. Addresses look like `<namespace>.<tag>@inbox.testmail.app`. The free plan allows 100 emails a month and has no delete API, so tests keep emails apart with a unique tag and `receivedAfter`.
 
 ## CI (GitHub Actions)
 
@@ -33,7 +34,7 @@ Playwright end-to-end test suite (JavaScript, CommonJS) that runs on Chromium, l
 - `.github/pages/index.html`: landing page template. The publish job replaces `<!-- SUITES -->` with one link per suite from `e2e-suites.json`, so don't add links by hand.
 - Reports: https://taha-khurram.github.io/complya/ (`/home/`, `/login/`).
 - The publish job commits to `gh-pages` as the user who started the run (`github.actor`), not as `github-actions[bot]`, so the bot doesn't appear as a repo contributor.
-- Secrets (`USER_EMAIL`, `USER_PASSWORD`) live in the GitHub `staging` environment. Login tests skip when `USER_EMAIL` or `USER_PASSWORD` is missing.
+- Secrets (`USER_EMAIL`, `USER_PASSWORD`, `TESTMAIL_API_KEY`, `TESTMAIL_NAMESPACE`) live in the GitHub `staging` environment. Login tests skip when `USER_EMAIL` or `USER_PASSWORD` is missing.
 - **Every time a suite is added**, add a line for it to `.github/e2e-suites.json`, for example `{ "suite": "<flow>", "path": "tests/<flow>", "name": "<Flow> (E2E Tests)" }`. Also add `<flow>` to the `suite` dropdown `options` in `e2e.yml`, because GitHub can't build dropdown options from a file. Put the tests in `tests/<flow>/`. No new workflow file is needed.
 - Commits and PRs must not list Claude as author or co-author.
 
@@ -42,6 +43,7 @@ Playwright end-to-end test suite (JavaScript, CommonJS) that runs on Chromium, l
 - `playwright.config.js`: projects, reporters (list, html, allure-playwright), and `trace`/`video`/`screenshot` all set to `on`.
 - `tests/`: spec files (`**/*.spec.js`), one folder per suite. `tests/seed.spec.js` is the empty seed test the Playwright MCP agents start from.
 - `pages/`: page objects. `basepage.js` holds the shared header, the footer and `verifyPageLoaded()`. `homepage.js` click methods return the destination page object. `productpage.js`, `solutionpage.js` and `legalpage.js` each cover a group of pages, keyed by path.
+- `utils/`: helpers that aren't page objects. `testmail.js` creates testmail.app addresses, waits for an email (`waitForEmail`), and pulls links and codes out of it (`getLinks`, `getCode`).
 - `specs/`: Markdown test plans written by the playwright-test-planner agent.
 
 ## Conventions
