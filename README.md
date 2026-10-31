@@ -41,10 +41,12 @@ End-to-end test suite for [Complya](https://complya.dev), the AI-native practice
 | Home | `tests/home` | https://complya.dev | 9 | 55 |
 | Login | `tests/login` | https://app.complya.dev | 7 | 10 |
 | Signup | `tests/signup` | https://app.complya.dev | 9 | 10 |
+| Onboarding | `tests/onboarding` | https://app.complya.dev | 15 | 15 |
 
 - **Home** checks that every link on the home page opens the correct page and that the page loads (URL, title and h1). This covers the header, menus, main content, platform cards, footer and app store links.
 - **Login** covers email and password sign-in: a successful login, required-field and email-format validation, a wrong password, an unregistered email, password masking, and submitting with Enter.
 - **Signup** covers account creation: form validation, password rules and masking, a registered email, and a full signup that verifies the email through testmail.app and reaches onboarding. Each full signup run (SU-009) creates a dev account and uses one testmail.app email.
+- **Onboarding** takes one new account from its first sign-in to the "Waiting for Approval" dialog: the user terms, profile, workspace name, organization terms, workspace setup (required fields, formats and input masks), team invites (without sending them), and the signature. The tests run in order on one shared account (serial mode), so each run creates one dev account and one pending workspace and uses one testmail.app email.
 
 ---
 
@@ -65,16 +67,19 @@ complya/
 │   ├── legalpage.js           # /legal and legal documents (keyed by path)
 │   ├── loginpage.js           # App sign-in
 │   ├── signuppage.js          # Sign up form, Check your email and Email Verified pages
-│   ├── onboardingpage.js      # First onboarding screen after a new account's first login
+│   ├── onboardingpage.js      # Onboarding screens, one class each (terms to Waiting for Approval)
 │   └── ...                    # About, Contact, Support, Download, Pricing, and others
 ├── tests/
 │   ├── home/                  # hp-0xx-*.spec.js
 │   ├── login/                 # lg-0xx-*.spec.js
 │   ├── signup/                # su-0xx-*.spec.js
+│   ├── onboarding/            # onboarding.spec.js (OB-001 to OB-015, serial)
 │   └── seed.spec.js           # Seed used by the Playwright MCP agents
 ├── utils/
-│   └── testmail.js            # testmail.app inbox helper for email tests
+│   ├── testmail.js            # testmail.app inbox helper for email tests
+│   └── accounts.js            # createVerifiedAccount(): signs up and verifies a new account
 ├── Test Artifacts/            # Test plans and Gherkin feature files per suite
+├── Bug Report/                # Bugs found while exploring, with steps to reproduce
 ├── specs/                     # Raw test plans from the planner agent
 └── playwright.config.js       # Project, reporters, baseURL, trace, video and screenshots
 ```
@@ -114,7 +119,7 @@ TESTMAIL_NAMESPACE=
 | `USER_PASSWORD` | Login suite | Password for `USER_EMAIL` |
 | `TESTMAIL_API_KEY` | Email tests | API key from the [testmail.app](https://testmail.app) console |
 | `TESTMAIL_NAMESPACE` | Email tests | Your testmail.app namespace. Addresses look like `<namespace>.<tag>@inbox.testmail.app` |
-| `APP_URL` | Optional | Overrides the app host for the login and signup suites (default `https://app.complya.dev`) |
+| `APP_URL` | Optional | Overrides the app host for the login, signup and onboarding suites (default `https://app.complya.dev`) |
 
 The Home suite needs none of these.
 
@@ -156,7 +161,7 @@ All CI runs through one workflow, **E2E Tests** (`.github/workflows/e2e.yml`). I
 ### Run it
 
 1. Open **Actions → E2E Tests → Run workflow**.
-2. Pick the branch and a **Suite**: `all`, `home`, `login` or `signup`.
+2. Pick the branch and a **Suite**: `all`, `home`, `login`, `signup` or `onboarding`.
 3. Click **Run workflow**.
 
 ### What happens
@@ -248,6 +253,8 @@ class PricingPage extends BasePage {
 | `Home/home.feature` | Gherkin BDD scenarios for the same cases |
 | `Login/Login_BDD_Scenarios.md` | Login test design |
 | `Login/login.feature` | Gherkin BDD scenarios for login |
+| `Onboarding/Onboarding_BDD_Scenarios.md` | Onboarding test design: page reference per screen, scenarios, observations |
+| `Onboarding/onboarding.feature` | Gherkin BDD scenarios for onboarding |
 
 The `.feature` files are documentation only. The project has no Cucumber runner.
 

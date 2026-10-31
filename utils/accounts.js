@@ -1,0 +1,24 @@
+const { SignUpPage, EmailVerifiedPage } = require('../pages/signuppage')
+const { generateEmailAddress, waitForEmail, getLinks } = require('./testmail')
+
+// Signs up a new account and opens its verification link, so it can sign in and start onboarding.
+// Each call uses 1 testmail.app email and leaves a permanent dev account. `page` must have the
+// app baseURL (https://app.complya.dev), e.g. browser.newPage({ baseURL })
+const createVerifiedAccount = async (page, { prefix = 'qa', password = 'QaSignup1!' } = {}) => {
+  const email = generateEmailAddress(prefix)
+
+  const signUpPage = await new SignUpPage(page).goto()
+  const sentAt = new Date()
+  const checkEmailPage = await signUpPage.signUp(email, password)
+  await checkEmailPage.verifyPageLoaded()
+
+  const mail = await waitForEmail(email, { receivedAfter: sentAt })
+  const link = getLinks(mail).find((url) => url.includes('/app/auth/action?mode=verifyEmail'))
+  if (!link) throw new Error(`No verification link in the email to ${email}`)
+
+  const emailVerifiedPage = await new EmailVerifiedPage(page).goto(link)
+  await emailVerifiedPage.verifyPageLoaded()
+  return { email, password }
+}
+
+module.exports = { createVerifiedAccount }

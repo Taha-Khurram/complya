@@ -42,8 +42,8 @@ Playwright end-to-end test suite (JavaScript, CommonJS) that runs on Chromium, l
 
 - `playwright.config.js`: projects, reporters (list, html, allure-playwright), and `trace`/`video`/`screenshot` all set to `on`.
 - `tests/`: spec files (`**/*.spec.js`), one folder per suite. `tests/seed.spec.js` is the empty seed test the Playwright MCP agents start from.
-- `pages/`: page objects. `basepage.js` holds the shared header, the footer and `verifyPageLoaded()`. `homepage.js` click methods return the destination page object. `productpage.js`, `solutionpage.js` and `legalpage.js` each cover a group of pages, keyed by path.
-- `utils/`: helpers that aren't page objects. `testmail.js` creates testmail.app addresses, waits for an email (`waitForEmail`), and pulls links and codes out of it (`getLinks`, `getCode`).
+- `pages/`: page objects. `basepage.js` holds the shared header, the footer and `verifyPageLoaded()`. `homepage.js` click methods return the destination page object. `productpage.js`, `solutionpage.js` and `legalpage.js` each cover a group of pages, keyed by path. `onboardingpage.js` has one class per onboarding screen, and `LoginPage.loginToOnboarding(email, password, step)` returns the screen the account resumes at.
+- `utils/`: helpers that aren't page objects. `testmail.js` creates testmail.app addresses, waits for an email (`waitForEmail`), and pulls links and codes out of it (`getLinks`, `getCode`). `accounts.js` has `createVerifiedAccount(page)`, which signs up a new account and verifies its email (1 testmail email per call).
 - `specs/`: Markdown test plans written by the playwright-test-planner agent.
 
 ## Conventions
