@@ -287,11 +287,15 @@ class WorkspaceSetupStepPage extends OnboardingStep {
     }
 
     // Phone, fax, NPI, EIN and ZIP are masked as you type, e.g. phone 7025550123 → "+1 (702) 555-0123".
-    // fill() over an existing phone number keeps its digits, so the phone is emptied and typed instead
+    // fill() and clear() don't reliably replace a phone number (old digits are kept, more so after a
+    // failed submit), so delete one character at a time down to the "+1" prefix, then type
     async fillField(field, value) {
         if (field !== 'phone') return await this.fields[field].fill(value)
-        await this.fields.phone.fill('')
-        await this.fields.phone.pressSequentially(value)
+        const phone = this.fields.phone
+        await phone.click()
+        await phone.press('End')
+        for (let i = 0; i < 20 && (await phone.inputValue()).replace(/\D/g, '').length > 1; i++) await phone.press('Backspace')
+        await phone.pressSequentially(value)
     }
 
     // Fills only the keys given, e.g. { phone: '7025550123', zip: '73301' }
