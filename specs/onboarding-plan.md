@@ -28,7 +28,8 @@ Email helper: `utils/testmail.js`.
 - Skip the suite when `TESTMAIL_API_KEY` or `TESTMAIL_NAMESPACE` is not set.
 - `baseURL` is `process.env.APP_URL || 'https://app.complya.dev'`. Use `test.use({ timezoneId: 'America/Chicago' })` so the detected time zone is predictable (to be confirmed that the app reads the browser time zone; on the explorer machine it preselected Asia/Karachi, the machine's zone).
 - Test data: first name Qa, last name Onboarding; company name `QA Onboard <last 6 digits of Date.now()>` (max 20 characters); phone 7025550123; fax 5551234567; NPI 1234567893; EIN 123456789; billing email billing.qa@example.com; address 1 Test Street; city Austin; ZIP 73301; state TX; invite emails qa.invite.one@example.com and qa.invite.two@example.com (typed only, never sent); typed signature "Qa Onboarding".
-- The suite never clicks "Send invites" with an email added, "Sign Out" or "Check Again".
+- Every step is done through the UI. The only URL a test opens is `/app/sign-in` (and `beforeAll` opens the verification link from the email, as a user would). Signup starts from the sign-in page's **Sign Up** link. The suite never opens onboarding URLs directly and never reloads; progress checks use the footer "Sign Out" and sign in again.
+- The suite never clicks "Send invites" with an email added, or "Sign Out" and "Check Again" in the Waiting for Approval dialog.
 
 ### Known issues (not asserted)
 
@@ -63,8 +64,6 @@ Email helper: `utils/testmail.js`.
   3. Check the checkboxes and the button.
     - expect: Five checkboxes are visible and all are unchecked.
     - expect: "Continue" is disabled.
-  4. Open /app/onboarding directly, then /app/ directly.
-    - expect: Each one redirects to /app/review-terms.
 
 #### 1.2. OB-002 Terms sections open one at a time and link to the full documents @onboarding @positive
 
@@ -103,7 +102,6 @@ Email helper: `utils/testmail.js`.
     - expect: The consents are saved (PUT /api/users/consents) and the URL is /app/onboarding.
     - expect: The text "1/4" and the h6 "Lets get to know you" are visible.
     - expect: The "Email" textbox is disabled and shows the account email.
-    - expect: Opening /app/review-terms or /app/ redirects to /app/onboarding.
 
 #### 1.4. OB-004 Profile step requires first and last name @onboarding @validation
 
@@ -133,8 +131,8 @@ Email helper: `utils/testmail.js`.
   2. Fill "First name" with Qa and "Last name" with Onboarding, then click "Continue".
     - expect: The toast "Profile created Successfully" shows (PATCH /api/users/profile).
     - expect: The text "2/4" and the h4 "Create your workspace" are visible.
-  3. Reload the page.
-    - expect: The page stays on step 2/4.
+  3. Click "Sign Out" in the footer, then sign in again.
+    - expect: The sign-in page shows, and after signing in the account is back on step 2/4.
 
 #### 1.6. OB-006 Company name validation @onboarding @validation
 
@@ -174,8 +172,8 @@ Email helper: `utils/testmail.js`.
     - expect: "Continue" is still disabled.
   6. Check the required agreement as well.
     - expect: "Continue" is enabled. Do not click it.
-  7. Reload the page.
-    - expect: The page returns to step 2/4 and "Company name" is empty (nothing was saved).
+  7. Click "Sign Out" in the footer, then sign in again.
+    - expect: The account is back on step 2/4 and "Company name" is empty (nothing was saved).
 
 #### 1.8. OB-008 Accepting the organization terms creates the workspace @onboarding @smoke @positive
 
@@ -270,8 +268,8 @@ Email helper: `utils/testmail.js`.
     - expect: Only one badge for qa.invite.one@example.com remains.
   8. Click each badge.
     - expect: Each badge is removed.
-  9. Add qa.invite.one@example.com again and reload the page.
-    - expect: The page stays on 4/4 and the badge is gone. Do not click "Send invites".
+  9. Add qa.invite.one@example.com again, click "Sign Out" in the footer, and sign in again.
+    - expect: The account is back on 4/4 and the badge is gone. Do not click "Send invites".
 
 #### 1.13. OB-013 Skipping invites opens Add your signature @onboarding @positive
 

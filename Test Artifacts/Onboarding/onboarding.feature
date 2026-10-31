@@ -3,6 +3,7 @@
 # UI text verified live on https://app.complya.dev on 2026-10-31.
 # Automated in tests/onboarding/onboarding.spec.js (pages/onboardingpage.js), test plan specs/onboarding-plan.md.
 # The scenarios share one new account and run in order, because an account can only move forward through onboarding.
+# Every step is done through the UI: only the sign-in page is opened by URL, and progress is checked by signing out and in again.
 # Test data (<new_email>, <password>) comes from configuration, never from this file.
 # Documentation only: this project has no Cucumber runner.
 
@@ -17,8 +18,8 @@ Feature: Onboarding
   @onboarding @smoke @positive @OB-001
   Scenario: OB-001 New account starts onboarding at Review our terms
     Given the account has not accepted the terms
-    When I open "/app/" or "/app/onboarding"
-    Then I should be redirected to "/app/review-terms"
+    When I sign in
+    Then I should be taken to "/app/review-terms"
     And I should see the heading "Review our terms"
     And I should see the sections "Terms of Service", "Privacy Policy", "Electronic Signature Disclosure", "AI Disclosure" and "HIPAA Acknowledgement"
     And the "Terms of Service" section should be open
@@ -72,6 +73,8 @@ Feature: Onboarding
     When I submit the profile with first name "Qa" and last name "Onboarding"
     Then I should see the toast "Profile created Successfully"
     And I should see step "2/4" with the heading "Create your workspace"
+    When I sign out and sign in again
+    Then I should be back on step 2/4
 
   @onboarding @validation @OB-006
   Scenario Outline: OB-006 Company name validation - <case>
@@ -103,7 +106,7 @@ Feature: Onboarding
     Then the "Continue" button should be disabled
     When I check the Master Service Agreement agreement
     Then the "Continue" button should be enabled
-    When I reload the page
+    When I sign out and sign in again
     Then I should be back on step 2/4 with an empty Company name
 
   @onboarding @smoke @positive @OB-008
@@ -167,6 +170,9 @@ Feature: Onboarding
     Then I should see "qa.invite.two@example.com" added once with the role "admin"
     When I click "qa.invite.one@example.com"
     Then it should be removed
+    When I add the invite email "qa.invite.one@example.com" again
+    And I sign out and sign in again
+    Then I should be back on step 4/4 with no invite emails added
     And no invites should be sent
 
   @onboarding @positive @OB-013

@@ -16,7 +16,7 @@ class OnboardingStep {
         this.stepNumber = page.getByText(/^\d\/4$/)
         this.continueButton = page.getByRole('button', { name: 'Continue', exact: true })
         // A plain div in the footer list, not a button or link
-        this.signOut = page.getByRole('listitem').getByText('Sign Out', { exact: true })
+        this.signOutLink = page.getByRole('listitem').getByText('Sign Out', { exact: true })
         this.errors = page.locator('.validation-message')
     }
 
@@ -35,6 +35,13 @@ class OnboardingStep {
 
     async submit() {
         await this.continueButton.click()
+    }
+
+    // Required here, not at the top, because loginpage.js requires this file
+    async signOut() {
+        const { LoginPage } = require('./loginpage')
+        await this.signOutLink.click()
+        return new LoginPage(this.page)
     }
 
     async isContinueEnabled() {
@@ -96,12 +103,6 @@ class ReviewTermsPage extends TermsStep {
         super(page)
 
         this.consents = page.getByRole('checkbox')
-    }
-
-    // Until the terms are accepted, other app pages (e.g. /app/, /app/onboarding) redirect here
-    async goto(path = '/app/review-terms') {
-        await this.page.goto(path, { waitUntil: 'domcontentloaded' })
-        return this
     }
 
     // The app bundle can take 30s+ to load, so allow a long wait
@@ -218,7 +219,10 @@ class WorkspaceStepPage extends OnboardingStep {
     }
 }
 
-/** Organization terms between steps 2/4 and 3/4 (same URL and heading as the first terms, no step number). */
+/**
+ * Organization terms between steps 2/4 and 3/4 (same URL and heading as the first terms, no step number).
+ * Nothing is saved until they are accepted, so signing in again returns to step 2/4 with an empty name.
+ */
 class OrganizationTermsPage extends TermsStep {
     static SECTIONS = ['Master Service Agreement', 'Privacy Policy', 'Business Associate Agreement', 'Terms of Service']
 
@@ -241,12 +245,6 @@ class OrganizationTermsPage extends TermsStep {
 
     async checkNewsletter() {
         await this.newsletterCheckbox.check()
-    }
-
-    // Nothing is saved until these terms are accepted, so a reload returns to step 2/4 with an empty name
-    async reload() {
-        await this.page.reload({ waitUntil: 'domcontentloaded' })
-        return new WorkspaceStepPage(this.page)
     }
 
     // Creates the workspace (POST /api/workspaces), toast "WorkSpace Created Successfully!"

@@ -52,14 +52,16 @@ Every step has a "Sign Out" item in the footer, and there is no Back button. Pro
 
 **Test data and side effects.** The scenarios run in order on one new account, because an account can only move forward through onboarding. Each run signs up one account (`<new_email>`, a testmail.app address, with `<password>`), which uses one testmail.app email (100 a month on the free plan) and leaves one permanent dev account and one pending workspace. Values used: name Qa / Onboarding, company `QA Onboard <6 digits>`, phone 7025550123, fax 5551234567, NPI 1234567893, EIN 123456789, billing email billing.qa@example.com, address 1 Test Street, city Austin, ZIP 73301, state TX, typed signature "Qa Onboarding". Invite emails are only typed, never sent.
 
+**UI only.** Every step is done through the UI. The only URL the tests open is the sign-in page (plus the verification link from the email, as a user would click it). Signup starts from the sign-in page's "Sign Up" link. Onboarding URLs are never opened directly and the page is never reloaded; progress is checked by clicking "Sign Out" and signing in again.
+
 ## Scenarios
 
 **Background:** Given a new account that has verified its email and is signed in, and the account has reached the step named in the scenario.
 
 ### OB-001 New account starts onboarding at Review our terms
 - **Given** the account has not accepted the terms
-- **When** I open `/app/` or `/app/onboarding`
-- **Then** I am redirected to `/app/review-terms`
+- **When** I sign in
+- **Then** I am taken to `/app/review-terms`
 - **And** I see the heading "Review our terms" and "Please agree to the terms below to continue."
 - **And** I see the five sections, with "Terms of Service" open
 - **And** all five checkboxes are unchecked and "Continue" is disabled
@@ -92,7 +94,6 @@ Every step has a "Sign Out" item in the footer, and there is no Back button. Pro
 - **When** I click that box's label text and click "Continue"
 - **Then** I see step "1/4" "Lets get to know you" at `/app/onboarding`
 - **And** the Email field shows `<new_email>` and is disabled
-- **And** opening `/app/review-terms` now takes me back to `/app/onboarding`
 
 ### OB-004 Profile step requires first and last name
 - **Given** I am on step 1/4
@@ -110,6 +111,8 @@ Every step has a "Sign Out" item in the footer, and there is no Back button. Pro
 - **When** I enter "Qa" and "Onboarding" and click "Continue"
 - **Then** I see the toast "Profile created Successfully"
 - **And** I see step "2/4" "Create your workspace"
+- **When** I click "Sign Out" and sign in again
+- **Then** I am back on step 2/4
 
 ### OB-006 Company name validation
 - **Given** I am on step 2/4
@@ -136,7 +139,7 @@ Every step has a "Sign Out" item in the footer, and there is no Back button. Pro
 - **Then** "Continue" is still disabled
 - **When** I check "I have read and agreed to the Master Service Agreement, Privacy Policy, Business Associate Agreement, and Terms of Service."
 - **Then** "Continue" is enabled
-- **When** I reload the page
+- **When** I click "Sign Out" and sign in again
 - **Then** I am back on step 2/4 and the Company name field is empty
 
 ### OB-008 Accepting the organization terms creates the workspace
@@ -197,6 +200,8 @@ Every step has a "Sign Out" item in the footer, and there is no Back button. Pro
 - **Then** I see it added once, with the role "admin"
 - **When** I click the first added email
 - **Then** it is removed
+- **When** I add `qa.invite.one@example.com` again, click "Sign Out" and sign in again
+- **Then** I am back on step 4/4 with no emails added
 - **And** no invites are sent
 
 ### OB-013 Skipping invites opens Add your signature
