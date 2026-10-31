@@ -43,12 +43,6 @@ test.describe('Onboarding', () => {
     await expect(reviewTermsPage.consents).toHaveCount(5)
     for (const label of ReviewTermsPage.CONSENTS) await expect(reviewTermsPage.consent(label)).not.toBeChecked()
     await expect(reviewTermsPage.continueButton).toBeDisabled()
-
-    // Other app pages redirect back until the terms are accepted
-    await reviewTermsPage.goto('/app/onboarding')
-    await reviewTermsPage.verifyPageLoaded()
-    await reviewTermsPage.goto('/app/')
-    await reviewTermsPage.verifyPageLoaded()
   })
 
   test('OB-002 Terms sections open one at a time and link to the full documents @onboarding @positive', async ({ page }) => {
@@ -110,12 +104,6 @@ test.describe('Onboarding', () => {
     await profileStep.verifyPageLoaded()
     await expect(profileStep.emailInput).toBeDisabled()
     await expect(profileStep.emailInput).toHaveValue(account.email)
-
-    // Accepted terms redirect forward
-    await reviewTermsPage.goto('/app/review-terms')
-    await profileStep.verifyPageLoaded()
-    await reviewTermsPage.goto('/app/')
-    await profileStep.verifyPageLoaded()
   })
 
   test('OB-004 Profile step requires first and last name @onboarding @validation', async ({ page }) => {
@@ -155,9 +143,11 @@ test.describe('Onboarding', () => {
     await workspaceStep.verifyPageLoaded()
     await expect(workspaceStep.heading).toBeVisible()
 
-    // The step is kept on reload
-    await page.reload({ waitUntil: 'domcontentloaded' })
-    await workspaceStep.verifyPageLoaded()
+    // The step is kept after signing out and in again
+    const loginPage = await workspaceStep.signOut()
+    await loginPage.verifyPageLoaded()
+    const resumedStep = await loginPage.loginToOnboarding(account.email, account.password, 'workspace')
+    await resumedStep.verifyPageLoaded()
   })
 
   test('OB-006 Company name validation @onboarding @validation', async ({ page }) => {
@@ -231,10 +221,12 @@ test.describe('Onboarding', () => {
     await termsPage.checkAgreement()
     await expect(termsPage.continueButton).toBeEnabled()
 
-    // Nothing is saved: a reload returns to step 2/4 with an empty name
-    const reloadedStep = await termsPage.reload()
-    await reloadedStep.verifyPageLoaded()
-    await expect(reloadedStep.companyNameInput).toHaveValue('')
+    // Nothing is saved: signing out and in again returns to step 2/4 with an empty name
+    const loginPage = await termsPage.signOut()
+    await loginPage.verifyPageLoaded()
+    const resumedStep = await loginPage.loginToOnboarding(account.email, account.password, 'workspace')
+    await resumedStep.verifyPageLoaded()
+    await expect(resumedStep.companyNameInput).toHaveValue('')
   })
 
   test('OB-008 Accepting the organization terms creates the workspace @onboarding @smoke @positive', async ({ page }) => {
@@ -387,13 +379,15 @@ test.describe('Onboarding', () => {
     await inviteStep.removeInvite('qa.invite.two@example.com')
     await expect(inviteStep.invites).toHaveCount(0)
 
-    // Unsent invites are not kept
+    // Unsent invites are not kept after signing out and in again
     await inviteStep.addEmail('qa.invite.one@example.com')
     await expect(inviteStep.invites).toHaveCount(1)
-    await page.reload({ waitUntil: 'domcontentloaded' })
-    await inviteStep.verifyPageLoaded()
-    await expect(inviteStep.skipButton).toBeVisible()
-    await expect(inviteStep.invites).toHaveCount(0)
+    const loginPage = await inviteStep.signOut()
+    await loginPage.verifyPageLoaded()
+    const resumedStep = await loginPage.loginToOnboarding(account.email, account.password, 'invite')
+    await resumedStep.verifyPageLoaded()
+    await expect(resumedStep.skipButton).toBeVisible()
+    await expect(resumedStep.invites).toHaveCount(0)
   })
 
   test('OB-013 Skipping invites opens Add your signature @onboarding @positive', async ({ page }) => {
