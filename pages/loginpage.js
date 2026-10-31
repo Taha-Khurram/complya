@@ -1,6 +1,7 @@
 //Created By AI
 const { expect } = require('@playwright/test')
 const { DashboardPage } = require('./dashboardpage')
+const { ForgetPasswordPage } = require('./forgetpasswordpage')
 const { ONBOARDING_STEPS } = require('./onboardingpage')
 const { SignUpPage } = require('./signuppage')
 
@@ -21,6 +22,7 @@ class LoginPage {
         this.emailNotVerifiedMessage = page.getByText('Email not verified.')
 
         this.signUpLink = page.getByRole('link', { name: 'Sign Up', exact: true })
+        this.forgetPasswordLink = page.getByRole('link', { name: 'Forget password', exact: true })
     }
 
     async goto() {
@@ -74,6 +76,11 @@ class LoginPage {
     async clickSignUp() {
         await this.signUpLink.click()
         return new SignUpPage(this.page)
+    }
+
+    async clickForgetPassword() {
+        await this.forgetPasswordLink.click()
+        return new ForgetPasswordPage(this.page)
     }
 
     async togglePasswordVisibility() {

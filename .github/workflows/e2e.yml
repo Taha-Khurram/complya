@@ -7,7 +7,7 @@ on:
         description: Suite to run
         type: choice
         # Keep in sync with .github/e2e-suites.json
-        options: [all, home, login, signup, onboarding]
+        options: [all, home, login, signup, onboarding, forget-password]
         default: all
 
 permissions:
