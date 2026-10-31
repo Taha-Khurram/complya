@@ -1,7 +1,7 @@
 //Created By AI
 const { expect } = require('@playwright/test')
 const { DashboardPage } = require('./dashboardpage')
-const { OnboardingPage } = require('./onboardingpage')
+const { ONBOARDING_STEPS } = require('./onboardingpage')
 const { SignUpPage } = require('./signuppage')
 
 class LoginPage {
@@ -60,12 +60,15 @@ class LoginPage {
         return new DashboardPage(this.page)
     }
 
-    // A new account's first login opens onboarding instead of Home
-    async loginToOnboarding(email, password) {
+    // An account that hasn't finished onboarding opens it instead of Home, at the step it reached:
+    // 'terms' (first login), 'profile', 'workspace', 'workspaceSetup', 'invite' or 'signature'
+    async loginToOnboarding(email, password, step = 'terms') {
+        const StepPage = ONBOARDING_STEPS[step]
+        if (!StepPage) throw new Error(`Unknown onboarding step "${step}"`)
         await this.fillEmail(email)
         await this.fillPassword(password)
         await this.submit()
-        return new OnboardingPage(this.page)
+        return new StepPage(this.page)
     }
 
     async clickSignUp() {
