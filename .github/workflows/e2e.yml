@@ -7,7 +7,7 @@ on:
         description: Suite to run
         type: choice
         # Keep in sync with .github/e2e-suites.json
-        options: [all, home, login, signup, onboarding, forget-password]
+        options: [all, home, login, signup, onboarding, forget-password, settings]
         default: all
 
 permissions:
@@ -43,6 +43,8 @@ jobs:
       USER_PASSWORD: ${{ secrets.USER_PASSWORD }}
       TESTMAIL_API_KEY: ${{ secrets.TESTMAIL_API_KEY }}
       TESTMAIL_NAMESPACE: ${{ secrets.TESTMAIL_NAMESPACE }}
+      WORKSPACE_EMAIL: ${{ secrets.WORKSPACE_EMAIL }}
+      WORKSPACE_PASSWORD: ${{ secrets.WORKSPACE_PASSWORD }}
       TEST_PATH: ${{ matrix.path }}
     steps:
       - uses: actions/checkout@v4

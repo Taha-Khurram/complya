@@ -9,7 +9,7 @@ const baseURL = process.env.APP_URL || 'https://app.complya.dev'
 test.use({ baseURL })
 
 // Each run swaps the account's password between these two
-const PASSWORDS = ['QaReset1!', 'QaReset2!']
+const PASSWORDS = ['QaSignup1!', 'QaReset1!']
 
 // Signs in from a separate context, so the test page stays signed out
 const findCurrentPassword = async (browser, email) => {
@@ -28,9 +28,10 @@ const findCurrentPassword = async (browser, email) => {
 test.describe('Forget Password', () => {
   test.skip(!process.env.TESTMAIL_API_KEY || !process.env.TESTMAIL_NAMESPACE, 'TESTMAIL_API_KEY and TESTMAIL_NAMESPACE are not set')
 
-  // Sends one reset email and changes the password of the "QA Onboard 984491" account, so the whole journey is one test
+  // Sends one reset email and changes the password of the "QA Onboard 391897" account, so the whole journey is one test.
+  // Never the WORKSPACE_EMAIL account ("QA Onboard 984491"), whose password must stay fixed
   test('FP-006 Full password reset by email: reset page, validation, success, old and new password, reused link @forget-password @smoke @positive @email', async ({ page, browser }) => {
-    const email = `${process.env.TESTMAIL_NAMESPACE}.onboarding.1793444984776if5o@inbox.testmail.app`
+    const email = `${process.env.TESTMAIL_NAMESPACE}.signup.1793389793652ebyj@inbox.testmail.app`
 
     // 1. Find which password works now and pick the other one
     const currentPassword = await findCurrentPassword(browser, email)

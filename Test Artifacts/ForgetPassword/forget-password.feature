@@ -4,7 +4,7 @@
 # UI text verified live on https://app.complya.dev on 2026-10-31.
 # Automated in tests/forget-password/ (pages/forgetpasswordpage.js). FP-006a to FP-006e run as one test (FP-006) on a single reset email.
 # Test data (<account_email>, <current_password>, <new_password>, <unregistered_email>) comes from configuration, never from this file.
-# <account_email> is the "QA Onboard 984491" onboarding account. The .env login account (USER_EMAIL) is never used here.
+# <account_email> is the "QA Onboard 391897" onboarding account. The .env login account (USER_EMAIL) and the workspace account (WORKSPACE_EMAIL, "QA Onboard 984491") are never used here.
 # Documentation only: this project has no Cucumber runner.
 
 Feature: Forget password

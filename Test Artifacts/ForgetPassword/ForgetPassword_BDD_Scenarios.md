@@ -58,7 +58,7 @@ All UI text below was observed in a live browser with the Playwright MCP on the 
 10 scenarios, 15 test cases once the outline examples are counted. FP-006a to FP-006e run as one automated test (FP-006) on a single reset email, so a full run uses **1 testmail email**.
 
 **Test data and side effects.**
-- `<account_email>` is the existing onboarding account of workspace "QA Onboard 984491" (a testmail.app address). The `.env` login account (`USER_EMAIL`) is never used here. No accounts are created.
+- `<account_email>` is the existing onboarding account of workspace "QA Onboard 391897" (a testmail.app address). The `.env` login account (`USER_EMAIL`) and the workspace account (`WORKSPACE_EMAIL`, "QA Onboard 984491") are never used here. No accounts are created.
 - Each run changes that account's password. It alternates between `<password_a>` and `<password_b>`: the test finds which one works now (`<current_password>`) and resets to the other (`<new_password>`). Both values come from configuration, never from these files.
 - `<unregistered_email>` is a fresh testmail.app address with no account. No email is delivered to it.
 - testmail.app's free plan allows 100 emails a month, and the app limits how often it sends reset emails. FP-006 must not run in parallel with itself.

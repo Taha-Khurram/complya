@@ -23,6 +23,7 @@ Playwright end-to-end test suite (JavaScript, CommonJS) that runs on Chromium, l
 
 - `.env` holds `USER_EMAIL` and `USER_PASSWORD` (a dev test account on app.complya.dev, used by the login suite). It is gitignored, so never commit it or print its values. `playwright.config.js` loads it with `dotenv`.
 - `.env` also holds `TESTMAIL_API_KEY` and `TESTMAIL_NAMESPACE` for [testmail.app](https://testmail.app), used by email tests through `utils/testmail.js`. Addresses look like `<namespace>.<tag>@inbox.testmail.app`. The free plan allows 100 emails a month and has no delete API, so tests keep emails apart with a unique tag and `receivedAfter`.
+- `.env` also holds `WORKSPACE_EMAIL` and `WORKSPACE_PASSWORD`: the approved "QA Onboard 984491" workspace account. **Use it for all testing and exploration except the Login suite (`USER_EMAIL`), the Onboarding suite (new accounts) and the Forget Password suite.** Its password stays fixed, so never change it. Forget Password FP-006 uses its own account (workspace "QA Onboard 391897") and swaps that account's password between `QaSignup1!` and `QaReset1!`.
 
 ## CI (GitHub Actions)
 
@@ -34,7 +35,7 @@ Playwright end-to-end test suite (JavaScript, CommonJS) that runs on Chromium, l
 - `.github/pages/index.html`: landing page template. The publish job replaces `<!-- SUITES -->` with one link per suite from `e2e-suites.json`, so don't add links by hand.
 - Reports: https://taha-khurram.github.io/complya/ (`/home/`, `/login/`).
 - The publish job commits to `gh-pages` as the user who started the run (`github.actor`), not as `github-actions[bot]`, so the bot doesn't appear as a repo contributor.
-- Secrets (`USER_EMAIL`, `USER_PASSWORD`, `TESTMAIL_API_KEY`, `TESTMAIL_NAMESPACE`) live in the GitHub `staging` environment. Login tests skip when `USER_EMAIL` or `USER_PASSWORD` is missing.
+- Secrets (`USER_EMAIL`, `USER_PASSWORD`, `TESTMAIL_API_KEY`, `TESTMAIL_NAMESPACE`, `WORKSPACE_EMAIL`, `WORKSPACE_PASSWORD`) live in the GitHub `staging` environment. Login tests skip when `USER_EMAIL` or `USER_PASSWORD` is missing.
 - **Every time a suite is added**, add a line for it to `.github/e2e-suites.json`, for example `{ "suite": "<flow>", "path": "tests/<flow>", "name": "<Flow> (E2E Tests)" }`. Also add `<flow>` to the `suite` dropdown `options` in `e2e.yml`, because GitHub can't build dropdown options from a file. Put the tests in `tests/<flow>/`. No new workflow file is needed.
 - Commits and PRs must not list Claude as author or co-author.
 

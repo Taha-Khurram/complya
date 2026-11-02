@@ -43,12 +43,14 @@ End-to-end test suite for [Complya](https://complya.dev), the AI-native practice
 | Signup | `tests/signup` | https://app.complya.dev | 9 | 10 |
 | Onboarding | `tests/onboarding` | https://app.complya.dev | 15 | 15 |
 | Forget Password | `tests/forget-password` | https://app.complya.dev | 6 | 6 |
+| Settings | `tests/settings` | https://app.complya.dev | 4 | 21 |
 
 - **Home** checks that every link on the home page opens the correct page and that the page loads (URL, title and h1). This covers the header, menus, main content, platform cards, footer and app store links.
 - **Login** covers email and password sign-in: a successful login, required-field and email-format validation, a wrong password, an unregistered email, password masking, and submitting with Enter.
 - **Signup** covers account creation: form validation, password rules and masking, a registered email, and a full signup that verifies the email through testmail.app and reaches onboarding. Each full signup run (SU-009) creates a dev account and uses one testmail.app email.
 - **Onboarding** takes one new account from its first sign-in to the "Waiting for Approval" dialog: the user terms, profile, workspace name, organization terms, workspace setup (required fields, formats and input masks), team invites (without sending them), and the signature. The tests run in order on one shared account (serial mode), so each run creates one dev account and one pending workspace and uses one testmail.app email.
-- **Forget Password** covers the reset flow: the Forget password link, email validation, an unregistered email, invalid reset links, and a full reset by email (FP-006), with reset page validation, the old and new password, and a reused link. FP-001 to FP-005 send no email. FP-006 uses one testmail.app email per run and swaps the password of the existing "QA Onboard 984491" account between `QaReset1!` and `QaReset2!`. It never uses `USER_EMAIL`.
+- **Forget Password** covers the reset flow: the Forget password link, email validation, an unregistered email, invalid reset links, and a full reset by email (FP-006), with reset page validation, the old and new password, and a reused link. FP-001 to FP-005 send no email. FP-006 uses one testmail.app email per run and swaps the password of the existing "QA Onboard 391897" account between `QaSignup1!` and `QaReset1!`. That workspace must be approved for FP-006 to reach Home. It never uses `USER_EMAIL` or the `WORKSPACE_EMAIL` account.
+- **Settings** signs in as the `WORKSPACE_EMAIL` account and opens Settings from the sidebar, then checks that each of the 10 cards opens its page (URL and heading) and that each back button returns to Settings. It is driven only from the UI, except ST-004, which opens `/app/settings` signed out and expects the login page.
 
 ---
 
@@ -71,6 +73,8 @@ complya/
 │   ├── forgetpasswordpage.js  # Forget Password, Check your email and Reset Password pages
 │   ├── signuppage.js          # Sign up form, Check your email and Email Verified pages
 │   ├── onboardingpage.js      # Onboarding screens, one class each (terms to Waiting for Approval)
+│   ├── dashboardpage.js       # App Home: product tour and sidebar Settings link
+│   ├── settingspage.js        # Settings and the 10 pages its cards open (keyed by card name)
 │   └── ...                    # About, Contact, Support, Download, Pricing, and others
 ├── tests/
 │   ├── home/                  # hp-0xx-*.spec.js
@@ -78,6 +82,7 @@ complya/
 │   ├── signup/                # su-0xx-*.spec.js
 │   ├── onboarding/            # onboarding.spec.js (OB-001 to OB-015, serial)
 │   ├── forget-password/       # fp-00x-*.spec.js
+│   ├── settings/              # st-00x-*.spec.js
 │   └── seed.spec.js           # Seed used by the Playwright MCP agents
 ├── utils/
 │   ├── testmail.js            # testmail.app inbox helper for email tests
@@ -115,6 +120,8 @@ USER_EMAIL=
 USER_PASSWORD=
 TESTMAIL_API_KEY=
 TESTMAIL_NAMESPACE=
+WORKSPACE_EMAIL=
+WORKSPACE_PASSWORD=
 ```
 
 | Variable | Required for | Notes |
@@ -123,6 +130,8 @@ TESTMAIL_NAMESPACE=
 | `USER_PASSWORD` | Login suite | Password for `USER_EMAIL` |
 | `TESTMAIL_API_KEY` | Email tests | API key from the [testmail.app](https://testmail.app) console |
 | `TESTMAIL_NAMESPACE` | Email tests | Your testmail.app namespace. Addresses look like `<namespace>.<tag>@inbox.testmail.app` |
+| `WORKSPACE_EMAIL` | Every suite except Login, Onboarding and Forget Password | The approved "QA Onboard 984491" workspace account on **app.complya.dev** |
+| `WORKSPACE_PASSWORD` | Same as `WORKSPACE_EMAIL` | Password for `WORKSPACE_EMAIL`. It stays fixed: no test changes it |
 | `APP_URL` | Optional | Overrides the app host for the login, signup, onboarding and forget password suites (default `https://app.complya.dev`) |
 
 The Home suite needs none of these.
@@ -182,7 +191,7 @@ plan  ──►  test (one runner per suite, in parallel)  ──►  publish (o
 
 **Artifacts per run (kept 14 days):** `playwright-report-<suite>`, `allure-results-<suite>`, and `allure-report-<suite>`, a single-file report you can open as `index.html` directly.
 
-**Secrets:** `USER_EMAIL`, `USER_PASSWORD`, `TESTMAIL_API_KEY` and `TESTMAIL_NAMESPACE` live in the GitHub `staging` environment.
+**Secrets:** `USER_EMAIL`, `USER_PASSWORD`, `TESTMAIL_API_KEY`, `TESTMAIL_NAMESPACE`, `WORKSPACE_EMAIL` and `WORKSPACE_PASSWORD` live in the GitHub `staging` environment.
 
 **Report commits:** the publish job commits to `gh-pages` as the user who started the run, not as `github-actions[bot]`.
 
