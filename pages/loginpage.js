@@ -6,6 +6,9 @@ const { ONBOARDING_STEPS } = require('./onboardingpage')
 const { SignUpPage } = require('./signuppage')
 
 class LoginPage {
+    // Temporary Firebase errors that the app shows as a toast, e.g. "Firebase: Error (auth/the-service-is-currently-unavailable.)."
+    static TRANSIENT_AUTH_ERROR = /auth\/(the-service-is-currently-unavailable|network-request-failed)/
+
     constructor(page) {
         this.page = page
 
@@ -18,6 +21,8 @@ class LoginPage {
         this.passwordError = page.locator('.form-group').filter({ has: this.passwordInput }).locator('.validation-message')
 
         this.formError = page.getByRole('alert')
+        this.toastCloseButton = page.getByRole('button', { name: 'close', exact: true })
+        this.validationMessages = page.locator('.form-group .validation-message')
         // Inline message when an account that hasn't verified its email signs in
         this.emailNotVerifiedMessage = page.getByText('Email not verified.')
 
@@ -55,10 +60,37 @@ class LoginPage {
         await this.passwordInput.press('Enter')
     }
 
+    // Clicks Sign In and waits for the first result: leaving the sign-in page, a toast, an inline error or
+    // "Email not verified.". A temporary Firebase error toast is closed and Sign In clicked again (3 attempts in all),
+    // so it fails here with a clear message instead of the next page timing out. Other results are left to the caller
+    async submitWithRetry(attempts = 3) {
+        const timeout = 60000
+        for (let attempt = 1; attempt <= attempts; attempt++) {
+            await this.submit()
+            // Each wait catches its own timeout, so the ones that lose the race can't reject later
+            const outcome = await Promise.race([
+                this.page.waitForURL((url) => !url.pathname.startsWith('/app/sign-in'), { timeout }).then(() => 'signedIn', () => 'none'),
+                this.formError.first().waitFor({ state: 'visible', timeout }).then(() => 'toast', () => 'none'),
+                this.validationMessages.first().waitFor({ state: 'visible', timeout }).then(() => 'invalid', () => 'none'),
+                this.emailNotVerifiedMessage.waitFor({ state: 'visible', timeout }).then(() => 'notVerified', () => 'none'),
+            ])
+            if (outcome !== 'toast') return
+
+            const message = (await this.formError.first().textContent()) || ''
+            if (!LoginPage.TRANSIENT_AUTH_ERROR.test(message)) return
+            if (attempt === attempts) throw new Error(`Firebase auth unavailable after ${attempts} attempts: ${message}`)
+
+            // The toast closes itself after ~5s, so it may already be gone
+            await this.toastCloseButton.first().click({ timeout: 5000 }).catch(() => {})
+            await this.formError.first().waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+            await this.page.waitForTimeout(2000)
+        }
+    }
+
     async login(email, password) {
         await this.fillEmail(email)
         await this.fillPassword(password)
-        await this.submit()
+        await this.submitWithRetry()
         return new DashboardPage(this.page)
     }
 
@@ -69,7 +101,7 @@ class LoginPage {
         if (!StepPage) throw new Error(`Unknown onboarding step "${step}"`)
         await this.fillEmail(email)
         await this.fillPassword(password)
-        await this.submit()
+        await this.submitWithRetry()
         return new StepPage(this.page)
     }
 
