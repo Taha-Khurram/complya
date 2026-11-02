@@ -10,6 +10,7 @@ Playwright end-to-end test suite (JavaScript, CommonJS) that runs on Chromium, l
 - Implement only after I approve the plan.
 - Follow the directory structure described below. Put new files where they belong.
 - Never run `git commit`, `git push` or `git pull` (or `git fetch`/`git merge` from the remote) on your own. Stop after making changes, tell me they're ready, and let me commit, push and pull.
+- All work happens on the `staging` branch. Code reaches `main` (production) only through a pull request from `staging`. Never commit or push directly to `main`; if `main` is checked out, switch to `staging` before changing anything.
 
 ## Commands
 
@@ -30,7 +31,7 @@ Playwright end-to-end test suite (JavaScript, CommonJS) that runs on Chromium, l
 - `.github/workflows/e2e.yml` ("E2E Tests"): the only workflow. It is manual only (`workflow_dispatch`), with no push or PR triggers. A **Suite** dropdown offers `all` or a single suite.
   - Job `plan` reads `.github/e2e-suites.json` and picks the suites to run.
   - Job `test` runs one matrix leg per suite, in parallel with `fail-fast: false`, in the `staging` environment. Each leg runs `npm test -- <path>` and uploads `playwright-report-<suite>`, `allure-results-<suite>` and a single-file `allure-report-<suite>` (open `index.html` directly).
-  - Job `publish` runs only on `main`, one suite at a time (`max-parallel: 1`). It builds the Allure report with `allure awesome`, keeps the last 20 runs of history, and deploys it to the `gh-pages` branch under `<suite>/`.
+  - Job `publish` runs only on `main` (after `staging` is merged into it), one suite at a time (`max-parallel: 1`). It builds the Allure report with `allure awesome`, keeps the last 20 runs of history, and deploys it to the `gh-pages` branch under `<suite>/`.
 - `.github/e2e-suites.json`: the suite list (`suite`, `path`, `name`). The test matrix and the report landing page are both built from it.
 - `.github/pages/index.html`: landing page template. The publish job replaces `<!-- SUITES -->` with one link per suite from `e2e-suites.json`, so don't add links by hand.
 - Reports: https://taha-khurram.github.io/complya/ (`/home/`, `/login/`).
