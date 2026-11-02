@@ -4,5 +4,6 @@
   { "suite": "signup", "path": "tests/signup", "name": "Signup (E2E Tests)" },
   { "suite": "onboarding", "path": "tests/onboarding", "name": "Onboarding (E2E Tests)" },
   { "suite": "forget-password", "path": "tests/forget-password", "name": "Forget Password (E2E Tests)" },
-  { "suite": "settings", "path": "tests/settings", "name": "Settings (E2E Tests)" }
+  { "suite": "settings", "path": "tests/settings", "name": "Settings (E2E Tests)" },
+  { "suite": "sites", "path": "tests/sites", "name": "Sites (E2E Tests)" }
 ]

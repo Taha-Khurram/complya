@@ -1,5 +1,6 @@
 // created by AI
 const { expect } = require('@playwright/test')
+const { SitesPage } = require('./sitespage')
 
 // The sidebar expands while hovered and covers the left of the page (the first card and the back button),
 // and the mouse is often left over it after a click, so move it onto the page content first
@@ -54,6 +55,12 @@ class SettingsPage {
         await moveOffSidebar(this.page)
         await this.card(name).click()
         return new SettingsSubPage(this.page, name)
+    }
+
+    async openSites() {
+        await moveOffSidebar(this.page)
+        await this.card('Sites').click()
+        return new SitesPage(this.page)
     }
 }
 
