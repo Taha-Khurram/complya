@@ -44,6 +44,7 @@ End-to-end test suite for [Complya](https://complya.dev), the AI-native practice
 | Onboarding | `tests/onboarding` | https://app.complya.dev | 15 | 15 |
 | Forget Password | `tests/forget-password` | https://app.complya.dev | 6 | 6 |
 | Settings | `tests/settings` | https://app.complya.dev | 4 | 21 |
+| Sites | `tests/sites` | https://app.complya.dev | 5 | 8 |
 
 - **Home** checks that every link on the home page opens the correct page and that the page loads (URL, title and h1). This covers the header, menus, main content, platform cards, footer and app store links.
 - **Login** covers email and password sign-in: a successful login, required-field and email-format validation, a wrong password, an unregistered email, password masking, and submitting with Enter.
@@ -51,6 +52,7 @@ End-to-end test suite for [Complya](https://complya.dev), the AI-native practice
 - **Onboarding** takes one new account from its first sign-in to the "Waiting for Approval" dialog: the user terms, profile, workspace name, organization terms, workspace setup (required fields, formats and input masks), team invites (without sending them), and the signature. The tests run in order on one shared account (serial mode), so each run creates one dev account and one pending workspace and uses one testmail.app email.
 - **Forget Password** covers the reset flow: the Forget password link, email validation, an unregistered email, invalid reset links, and a full reset by email (FP-006), with reset page validation, the old and new password, and a reused link. FP-001 to FP-005 send no email. FP-006 uses one testmail.app email per run and swaps the password of the existing "QA Onboard 391897" account between `QaSignup1!` and `QaReset1!`. That workspace must be approved for FP-006 to reach Home. It never uses `USER_EMAIL` or the `WORKSPACE_EMAIL` account.
 - **Settings** signs in as the `WORKSPACE_EMAIL` account and opens Settings from the sidebar, then checks that each of the 10 cards opens its page (URL and heading) and that each back button returns to Settings. It is driven only from the UI, except ST-004, which opens `/app/settings` signed out and expects the login page.
+- **Sites** signs in as the `WORKSPACE_EMAIL` account and opens Settings → Sites → Add. It creates a verified site with new valid data (SI-001) and a site whose NPI and EIN are already in use (SI-002), and checks required fields, format validation, and that Cancel and Close don't create a site. It is driven only from the UI. Sites can't be deleted, so each full run leaves 2 new sites in the workspace.
 
 ---
 
@@ -75,6 +77,7 @@ complya/
 │   ├── onboardingpage.js      # Onboarding screens, one class each (terms to Waiting for Approval)
 │   ├── dashboardpage.js       # App Home: product tour and sidebar Settings link
 │   ├── settingspage.js        # Settings and the 10 pages its cards open (keyed by card name)
+│   ├── sitespage.js           # Sites list, New Site dialog and site details
 │   └── ...                    # About, Contact, Support, Download, Pricing, and others
 ├── tests/
 │   ├── home/                  # hp-0xx-*.spec.js
@@ -83,10 +86,12 @@ complya/
 │   ├── onboarding/            # onboarding.spec.js (OB-001 to OB-015, serial)
 │   ├── forget-password/       # fp-00x-*.spec.js
 │   ├── settings/              # st-00x-*.spec.js
+│   ├── sites/                 # si-00x-*.spec.js
 │   └── seed.spec.js           # Seed used by the Playwright MCP agents
 ├── utils/
 │   ├── testmail.js            # testmail.app inbox helper for email tests
-│   └── accounts.js            # createVerifiedAccount(): signs up and verifies a new account
+│   ├── accounts.js            # createVerifiedAccount(): signs up and verifies a new account
+│   └── sitedata.js            # newSiteData(): a new site name, NPI and EIN on every call
 ├── Test Artifacts/            # Test plans and Gherkin feature files per suite
 ├── Bug Report/                # Bugs found while exploring, with steps to reproduce
 ├── specs/                     # Raw test plans from the planner agent
@@ -132,7 +137,7 @@ WORKSPACE_PASSWORD=
 | `TESTMAIL_NAMESPACE` | Email tests | Your testmail.app namespace. Addresses look like `<namespace>.<tag>@inbox.testmail.app` |
 | `WORKSPACE_EMAIL` | Every suite except Login, Onboarding and Forget Password | The approved "QA Onboard 984491" workspace account on **app.complya.dev** |
 | `WORKSPACE_PASSWORD` | Same as `WORKSPACE_EMAIL` | Password for `WORKSPACE_EMAIL`. It stays fixed: no test changes it |
-| `APP_URL` | Optional | Overrides the app host for the login, signup, onboarding and forget password suites (default `https://app.complya.dev`) |
+| `APP_URL` | Optional | Overrides the app host for the login, signup, onboarding, forget password, settings and sites suites (default `https://app.complya.dev`) |
 
 The Home suite needs none of these.
 
@@ -174,7 +179,7 @@ All CI runs through one workflow, **E2E Tests** (`.github/workflows/e2e.yml`). I
 ### Run it
 
 1. Open **Actions → E2E Tests → Run workflow**.
-2. Pick the branch and a **Suite**: `all`, `home`, `login`, `signup`, `onboarding` or `forget-password`.
+2. Pick the branch and a **Suite**: `all`, `home`, `login`, `signup`, `onboarding`, `forget-password`, `settings` or `sites`.
 3. Click **Run workflow**.
 
 ### What happens
@@ -270,6 +275,10 @@ class PricingPage extends BasePage {
 | `Onboarding/onboarding.feature` | Gherkin BDD scenarios for onboarding |
 | `ForgetPassword/ForgetPassword_BDD_Scenarios.md` | Forget password test design: page reference, messages, scenarios, observations |
 | `ForgetPassword/forget-password.feature` | Gherkin BDD scenarios for forget password |
+| `Settings/Settings_BDD_Scenarios.md` | Settings test design: cards, the pages they open, back buttons, observations |
+| `Settings/settings.feature` | Gherkin BDD scenarios for settings |
+| `Sites/Sites_BDD_Scenarios.md` | Sites test design: New Site fields, messages, verification results, test data, observations |
+| `Sites/sites.feature` | Gherkin BDD scenarios for creating a site |
 
 The `.feature` files are documentation only. The project has no Cucumber runner.
 
@@ -297,3 +306,4 @@ The `.feature` files are documentation only. The project has no Cucumber runner.
 | Valid credentials are rejected | The test account exists on **app.complya.dev** (dev), not app.complya.com |
 | `strict mode violation` on a link | The link name is repeated on the page. Scope the locator to a landmark or section in the page object |
 | The `/contact` heading can't be found by name | Known site accessibility bug: its accessible name is letter-spaced ("H o w c a n ..."). `ContactPage` matches the heading by text instead |
+| The Sites list keeps growing | Expected: sites can't be deleted from the UI, and SI-001 and SI-002 each add one per run. Each run uses a unique site name and a new NPI and EIN |
